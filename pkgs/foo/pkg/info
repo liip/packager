@@ -1,0 +1,6 @@
+name: foo
+version: 1.abc.39
+sha1: 82d8d7041336b22282c952df411b4675d060117f
+depends: other-foo
+depends: bar (> 1)
+depends-rpm: php

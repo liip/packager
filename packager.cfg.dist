@@ -1,0 +1,4 @@
+[packager]
+source: http://www.example.com/packager/latest/
+registry: %(pwd)sregistry.log
+
