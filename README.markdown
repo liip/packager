@@ -102,4 +102,4 @@ _/packager/latest_, this is the recommended files and folder structure:
 
 This keep your packages sortable by name and makes sure you can always 
 install the latest version with `$ sudo packager install foobar`.
-See also in the example package creation script *create.sh*.
+See also in the example package creation script: *create.example.sh*.
