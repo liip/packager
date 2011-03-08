@@ -71,14 +71,23 @@ Installation
 To install the packger you can execute the following commands:
 
 `$ cd /tmp`
+
 `$ git clone git://github.com/local-ch/packager.git packager`
+
 `$ cd packager`
+
 `$ cp packager.cfg.dist packager.cfg`
+
 `$ $EDITOR packager.cfg`
+
 `$ cd ..`
+
 `$ sudo mkdir -p /usr/local/lib`
+
 `$ sudo move packager /usr/local/lib/packager`
+
 `$ sudo ln -s /usr/local/lib/packager/packager.py /usr/local/bin/packager`
+
 
 
 Configuration
