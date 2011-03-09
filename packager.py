@@ -342,7 +342,13 @@ class Package(object):
         """Downloads the package into a local file."""
         cfg = Config()
         base = cfg['source'] + name
-        if self.__fetchIndividual(base + '.tar.bz2'):
+        baselatest = cfg['source'] + 'install/' + name +'-latest.dat';
+        print "downloading " + baselatest
+        filehandle = urllib.urlopen(baselatest)
+        base2 = cfg['source'] + filehandle.read()
+        if self.__fetchIndividual(base2):
+            return
+        elif self.__fetchIndividual(base + '.tar.bz2'):
             return
         elif self.__fetchIndividual(base + '.tar.gz'):
             return
