@@ -92,7 +92,8 @@ class CommandInfo(BaseCommand):
                 format = opt[1]
         
         for param in params:
-            pkg = Package(param)
+            registry = PackageRegistry()
+            pkg = Package(param, registry)
             info = pkg.info()
             if info:
                 if format == 'brief':
@@ -142,7 +143,7 @@ class CommandInstall(BaseCommand):
         
         registry = PackageRegistry()
         for param in params:
-            pkg = Package(param)
+            pkg = Package(param, registry)
             pkg.install(root, registry)
         registry.save()
 
@@ -175,17 +176,17 @@ class Package(object):
     Represents a single package with the information.
     Transparently handles fetching the package from network.
     """
-    def __init__(self, name):
+    def __init__(self, name, registry):
         self.__name = name
         self.__filename = ''
         self.__file = None
-        self.__fetch(name)
+        self.__fetch(name, registry)
     
     def info(self):
         """Returns information about this package as a dictionary."""
         member = None
         if not self.__file:
-            print "ERROR: Could not download package: %s" % self.__name
+            print "Did or could not download package: %s" % self.__name
             return
         for key in self.__file.getnames():
             modkey = key.replace('./', '')
@@ -204,8 +205,10 @@ class Package(object):
     
     def install(self, root, registry):
         """Installs this package, resolving any dependencies if necessary."""
-        print 'Installing package %s into root %s' % (self.__name, root)
         info = self.info()
+        if not info:
+            return;
+        print 'Installing package %s into root %s' % (self.__name, root)
         curr_version = registry.isInstalled(info['name'], info['version'])
         self._installDependencies(root, registry)
         if curr_version:
@@ -268,23 +271,29 @@ class Package(object):
         Install all required dependencies of the packager format for this
         package.
         """
-        deps = self.info().get('depends', [])
+        info = self.info()
+        if not info:
+            return
+        deps = info.get('depends', [])
         for dep in deps:
             pkg_name, version = self.__dependencyInstalled(dep, registry)
             if version:
                 if pkg_name not in deps_seen:
-                    pkg = Package(pkg_name)
+                    pkg = Package(pkg_name, registry)
                     deps_seen.append(pkg_name)
                     pkg._installDependencies(root, registry)
             else:
                 print "=" * 80
                 print "Installing dependency: %s" % dep
-                pkg = Package(pkg_name)
+                pkg = Package(pkg_name, registry)
                 pkg.install(root, registry)
                 print "=" * 80
     
     def __installDependenciesRPM(self, root, registry):
-        deps = self.info().get('depends-rpm', [])
+        info = self.info()
+        if not info:
+            return
+        deps = info.get('depends-rpm', [])
         if not deps:
             return
         deps = ' '.join(deps)
@@ -312,8 +321,10 @@ class Package(object):
             if not package in registry.packages:
                 return (package, False)
             else:
-                pkg = Package(package)
+                pkg = Package(package, registry)
                 info = pkg.info()
+                if not info:
+                    return (package, True)
                 version = info['version']
                 return (package, registry.isInstalled(package, version, '>='))
     
@@ -338,14 +349,30 @@ class Package(object):
                 print "ERROR: Key '%s' was repeated but can only appear once in the info file." % key
         return options
     
-    def __fetch(self, name):
+    def __fetch(self, name, registry):
         """Downloads the package into a local file."""
         cfg = Config()
         base = cfg['source'] + name
         baselatest = cfg['source'] + 'install/' + name +'-latest.dat';
         print "downloading " + baselatest
         filehandle = urllib.urlopen(baselatest)
-        base2 = cfg['source'] + filehandle.read()
+        packagepath = filehandle.readline()
+        p = re.compile('([^-^/]+-[^-]+)-([0-9]+-[0-9]+)')
+        m = p.search(packagepath)
+        if m:
+            name = m.group(1)
+            version = m.group(2)
+            name, version = name.strip(),  version.strip()
+            curr_version = registry.isInstalled(name, version)
+            if curr_version:
+                print "***"
+                print "Package %s is already installed at version %s. You wanted to install version %s." % (
+                    name, curr_version, version)
+                print "If you want to redownload it, delete the entry in registry.log (usually in /usr/local/packager/)"
+                print "***"
+                return
+        
+        base2 = cfg['source'] + packagepath
         if self.__fetchIndividual(base2):
             return
         elif self.__fetchIndividual(base + '.tar.bz2'):
