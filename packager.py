@@ -357,7 +357,7 @@ class Package(object):
         print "downloading " + baselatest
         filehandle = urllib.urlopen(baselatest)
         packagepath = filehandle.readline()
-        p = re.compile('([^-^/]+-[^-]+)-([0-9]+-[0-9]+)')
+        p = re.compile('([^/]+-[^-]+)-([0-9]+-[0-9]+)')
         m = p.search(packagepath)
         if m:
             name = m.group(1)
