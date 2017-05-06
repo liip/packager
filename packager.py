@@ -2,6 +2,15 @@
 import sys, tarfile, getopt, urllib, ConfigParser, os, os.path
 import re, itertools
 
+# Check python version as script doesn't run on 3.x
+if sys.version_info >= (3, 0):
+    sys.stdout.write("Sorry, requires Python 2.x, not Python 3.x. You can try:\n")
+    sys.stdout.write("$ sudo /usr/bin/python2.7 /usr/local/packager/packager.py " + sys.argv[1:] + "\n")
+    sys.stdout.write("If that didn't work either, try:\n")
+    sys.stdout.write("$ sudo /usr/bin/python2.6 /usr/local/packager/packager.py " + sys.argv[1:] + "\n")
+
+    sys.exit(1)
+
 class Cli(object):
     """Interactions with the command line."""
     
@@ -547,7 +556,6 @@ class Config(ConfigParser.SafeConfigParser):
     
     def __getitem__(self, key):
         return self.get('packager', key)
-
 
 c = Cli()
 c.run()
